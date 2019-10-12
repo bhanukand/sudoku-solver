@@ -1,0 +1,535 @@
+<html>
+
+<head>
+    <script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
+    <script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+</head>
+
+<body>
+    <style>
+        #mysudoku > div {
+            float: left;
+        }
+        #mysudoku {
+            float: left;
+        }
+        .doubleborder {
+            border: 1px solid black;
+            border-right: 2px solid black;
+        }
+        .doubleborderdown {
+            border: 1px solid black;
+            border-bottom: 2px solid black;
+        }
+        .doubleborderdownright {
+            border: 1px solid black;
+            border-bottom: 2px solid black;
+            border-right: 2px solid black;
+        }
+        .singleborder {
+            border: 1px solid black;
+        }
+        #mysudoku > div >input {
+            height: 30px;
+            width: 30px;
+            float: left;
+        }
+    </style>
+    <div style="padding: 50px;float: left;">
+        <section id="mysudoku"></section>
+        <div>
+            <input type="button" value="Process" onclick="validate()" style="margin: 30px 0 0 90px;">
+            </div>
+                <div id="mysudokuMesssage1" style="display:none;padding: 10px 0;"> Please wait...your sudoku is under processing.
+                    <br /> It may take 1 - 2 mins.
+                    </div>
+                        <div id="mysudokuMesssage2" style="display:none;padding: 10px 0;">Thanks for waiting..
+                            <br/> It is Done.Pls verify the answer
+                            </div>
+                        </div>
+
+                        <script>
+                            $(document).ready(function() {
+                                showGrid();
+                                $('#mysudoku input').on('keyup', function() {
+                                    if (parseInt($(this).val()) > 9 || isNaN($(this).val())) {
+                                        $(this).css('border-color', 'red');
+                                        alert('Please enter nos in range of 1-9');
+                                        $(this).val('');
+                                    }
+                                });
+                            });
+
+                            function showGrid() {
+                                var classname = "";
+                                for (i = 1; i <= 9; i++) {
+                                    $('#mysudoku').append('<div id=' + i + '></div>');
+                                    for (j = 1; j <= 9; j++) {
+                                        if (j % 3 == 0 && i % 3 != 0) {
+                                            classname = "doubleborder";
+                                        } else if (i % 3 == 0 && j % 3 != 0) {
+                                            classname = "doubleborderdown";
+                                        } else if (i % 3 == 0 && j % 3 == 0) {
+                                            classname = "doubleborderdownright";
+                                        } else {
+                                            classname = "singleborder";
+                                        }
+                                        $('#' + i).append('<input class=' + classname + ' type="text"  id=' + (i - 1) + '' + (j - 1) + '></input>');
+                                    }
+                                    $('#mysudoku').append('<br/>');
+                                }
+                            }
+                            var noArray = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+                            var totalRow = [];
+                            var totalGrid = [];
+                            var gridEle_0 = 0,
+                                gridEle_1 = 0,
+                                gridEle_2 = 0,
+                                gridEle_3 = 0,
+                                gridEle_4 = 0,
+                                gridEle_5 = 0,
+                                gridEle_6 = 0,
+                                gridEle_7 = 0,
+                                gridEle_8 = 0;
+                            var eachRow;
+                            var eachColumn;
+                            var eachGrid;
+                            var totalColumn = [];
+                            var valuesForEachElement = [];
+                            var grid_0 = [];
+                            var grid_1 = [];
+                            var grid_2 = [];
+                            var grid_3 = [];
+                            var grid_4 = [];
+                            var grid_5 = [];
+                            var grid_6 = [];
+                            var grid_7 = [];
+                            var grid_8 = [];
+                            var comeOutOfLoop = false;
+
+                            function validate() {
+                                $('#mysudoku input').removeAttr('style');
+                                var validated = validateAndSavevalues(true);
+                                if (validated) {
+                                    document.getElementById('mysudokuMesssage1').style.display = "block";
+                                    setTimeout(function() {
+                                        processForResult();
+                                    }, 1000);
+                                } else {
+                                    totalRow = [];
+                                    totalGrid = [];
+                                    gridEle_0 = 0;
+                                    gridEle_1 = 0;
+                                    gridEle_2 = 0;
+                                    gridEle_3 = 0;
+                                    gridEle_4 = 0;
+                                    gridEle_5 = 0;
+                                    gridEle_6 = 0;
+                                    gridEle_7 = 0;
+                                    gridEle_8 = 0;
+                                    eachRow;
+                                    eachColumn;
+                                    eachGrid;
+                                    totalColumn = [];
+                                    valuesForEachElement = [];
+                                    grid_0 = [];
+                                    grid_1 = [];
+                                    grid_2 = [];
+                                    grid_3 = [];
+                                    grid_4 = [];
+                                    grid_5 = [];
+                                    grid_6 = [];
+                                    grid_7 = [];
+                                    grid_8 = [];
+                                }
+                            }
+
+                            function processForResult() {
+                                compareRowsAndColumnsAndGrids();
+                                runLoop(0);
+                                document.getElementById('mysudokuMesssage1').style.display = "none";
+                                document.getElementById('mysudokuMesssage2').style.display = "block";
+                            }
+
+                            function validateAndSavevalues(bool) {
+                                var p = q = r = s = t = u = v = w = x = 0;
+                                var duplInGrid = false;
+                                eachGrid = [];
+                                eachGrid[0] = 0;
+                                for (i = 0; i < 9; i++) {
+                                    eachRow = [];
+                                    eachColumn = [];
+                                    eachRow[0] = 0;
+                                    eachColumn[0] = 0;
+                                    for (j = 0; j < 9; j++) {
+                                        var z = j + 1;
+                                        var k = z / 3;
+                                        var a = i + 1;
+                                        var l = a / 3;
+                                        if ($('#' + i + '' + j).val() != "") {
+                                            eachRow[j] = $('#' + i + '' + j).val();
+                                        } else {
+                                            eachRow[j] = "0";
+                                        }
+                                        if ($('#' + j + '' + i).val() != "") {
+                                            eachColumn[j] = $('#' + j + '' + i).val();
+                                        } else {
+                                            eachColumn[j] = "0";
+                                        }
+                                        if (l > 0 && l <= 1) {
+                                            if (k <= 1) {
+                                                if ($('#' + i + '' + j).val() != "") {
+                                                    if (grid_0.indexOf($('#' + i + '' + j).val()) == -1) {
+                                                        grid_0[p] = $('#' + i + '' + j).val();
+                                                    } else {
+                                                        duplInGrid = true;
+                                                    }
+                                                } else {
+                                                    grid_0[p] = "0";
+                                                }
+                                                p++;
+                                            }
+                                            if (k > 1 && k <= 2) {
+                                                if ($('#' + i + '' + j).val() != "") {
+                                                    if (grid_1.indexOf($('#' + i + '' + j).val()) == -1) {
+                                                        grid_1[q] = $('#' + i + '' + j).val();
+                                                    } else {
+                                                        duplInGrid = true;
+                                                    }
+                                                } else {
+                                                    grid_1[q] = "0";
+                                                }
+                                                q++;
+                                            }
+                                            if (k > 2 && k <= 3) {
+                                                if ($('#' + i + '' + j).val() != "") {
+                                                    if (grid_2.indexOf($('#' + i + '' + j).val()) == -1) {
+                                                        grid_2[r] = $('#' + i + '' + j).val();
+                                                    } else {
+                                                        duplInGrid = true;
+                                                    }
+                                                } else {
+                                                    grid_2[r] = "0";
+                                                }
+                                                r++;
+                                            }
+                                        }
+                                        if (l > 1 && l <= 2) {
+                                            if (k <= 1) {
+                                                if ($('#' + i + '' + j).val() != "") {
+                                                    if (grid_3.indexOf($('#' + i + '' + j).val()) == -1) {
+                                                        grid_3[s] = $('#' + i + '' + j).val();
+                                                    } else {
+                                                        duplInGrid = true;
+                                                    }
+                                                } else {
+                                                    grid_3[s] = "0";
+                                                }
+                                                s++;
+                                            }
+                                            if (k > 1 && k <= 2) {
+                                                if ($('#' + i + '' + j).val() != "") {
+                                                    if (grid_4.indexOf($('#' + i + '' + j).val()) == -1) {
+                                                        grid_4[t] = $('#' + i + '' + j).val();
+                                                    } else {
+                                                        duplInGrid = true;
+                                                    }
+                                                } else {
+                                                    grid_4[t] = "0";
+                                                }
+                                                t++;
+                                            }
+                                            if (k > 2 && k <= 3) {
+                                                if ($('#' + i + '' + j).val() != "") {
+                                                    if (grid_5.indexOf($('#' + i + '' + j).val()) == -1) {
+                                                        grid_5[u] = $('#' + i + '' + j).val();
+                                                    } else {
+                                                        duplInGrid = true;
+                                                    }
+                                                } else {
+                                                    grid_5[u] = "0";
+                                                }
+                                                u++;
+                                            }
+                                        }
+                                        if (l > 2 && l <= 3) {
+                                            if (k <= 1 && !(k > 1)) {
+                                                if ($('#' + i + '' + j).val() != "") {
+                                                    if (grid_6.indexOf($('#' + i + '' + j).val()) == -1) {
+                                                        grid_6[v] = $('#' + i + '' + j).val();
+                                                    } else {
+                                                        duplInGrid = true;
+                                                    }
+                                                } else {
+                                                    grid_6[v] = "0";
+                                                }
+                                                v++;
+                                            }
+                                            if (k > 1 && k <= 2) {
+                                                if ($('#' + i + '' + j).val() != "") {
+                                                    if (grid_7.indexOf($('#' + i + '' + j).val()) == -1) {
+                                                        grid_7[w] = $('#' + i + '' + j).val();
+                                                    } else {
+                                                        duplInGrid = true;
+                                                    }
+                                                } else {
+                                                    grid_7[w] = "0";
+                                                }
+                                                w++;
+                                            }
+                                            if (k > 2 && k <= 3) {
+                                                if ($('#' + i + '' + j).val() != "") {
+                                                    if (grid_8.indexOf($('#' + i + '' + j).val()) == -1) {
+                                                        grid_8[x] = $('#' + i + '' + j).val();
+                                                    } else {
+                                                        duplInGrid = true;
+                                                    }
+                                                } else {
+                                                    grid_8[x] = "0";
+                                                }
+                                                x++;
+                                            }
+                                        } /*Validation for duplicate entry in respective row or column*/
+                                        if ($('#' + i + '' + z).val() != "" && eachRow.indexOf($('#' + i + '' + z).val()) != -1) {
+                                            alert('Row' + (i + 1) + ' >contains duplicate of' + $('#' + i + '' + z).val());
+                                            $("input[id^=" + i + "]").each(function() {
+                                                $(this).css('border-top-color', 'red');
+                                                $(this).css('border-bottom-color', 'red');
+                                            });
+                                            $('#' + i + '' + z).css('border', '2px solid red');
+                                            return false;
+                                        }
+                                        if ($('#' + z + '' + i).val() != "" && eachColumn.indexOf($('#' + z + '' + i).val()) != -1) {
+                                            alert('Column' + (i + 1) + ' >contains duplicate of' + $('#' + z + '' + i).val());
+                                            $("input[id$=" + i + "]").each(function() {
+                                                $(this).css('border-left-color', 'red');
+                                                $(this).css('border-right-color', 'red');
+                                            });
+                                            $('#' + z + '' + i).css('border', '2px solid red');
+                                            return false;
+                                        }
+                                        if (duplInGrid && bool) {
+                                            $('#' + i + '' + j).css('border-color', 'red');
+                                            alert('Duplicate entry for the grid in which we have box in red color, Please correct and click on process Button');
+                                            $('#' + i + '' + j).val("");
+                                            return false;
+                                        } /*Validation end*/
+                                    }
+                                    totalRow[i] = eachRow;
+                                    totalColumn[i] = eachColumn;
+                                }
+                                for (i = 0; i < 9; i++) {
+                                    totalGrid[i] = 0;
+                                    totalGrid[i] = window["grid_" + i];
+                                }
+                                return true;
+                            }
+
+                            function compareRowsAndColumnsAndGrids() {
+                                var itemNo = 0;
+                                callagain = false;
+                                for (var i = 0; i < 9; i++) {
+                                    row = totalRow[i];
+                                    var itemsNeeded = returnItemsNeeded(row);
+                                    var emptyPlaces = returnEmptyPlaces(row);
+                                    for (j = 0; j < 9; j++) {
+                                        itemValues = [];
+                                        var z = j + 1;
+                                        var k = z / 3;
+                                        var a = i + 1;
+                                        var l = a / 3;
+                                        var increment = 0;
+                                        if (l > 0 && l <= 1) {
+                                            increment = 0;
+                                        }
+                                        if (l > 1 && l <= 2) {
+                                            increment = 3;
+                                        }
+                                        if (l > 2 && l <= 3) {
+                                            increment = 6
+                                        }
+                                        var comapreGrid = getComapreGrid(k, increment);
+                                        if (emptyPlaces[j] != undefined) {
+                                            var column = totalColumn[(emptyPlaces[j] - 1)];
+                                            for (var z = 0; z < itemsNeeded.length; z++) {
+                                                if (column.indexOf(itemsNeeded[z]) == -1 && comapreGrid.indexOf(itemsNeeded[z]) == -1) {
+                                                    itemValues.push(itemsNeeded[z]);
+                                                }
+                                                valuesForEachElement[itemNo] = itemValues;
+                                            }
+
+                                            if (valuesForEachElement[itemNo].length == 1) {
+                                                $('#' + i + '' + j).val(valuesForEachElement[itemNo][0]);
+                                                callagain = true;
+                                            }
+                                        }
+                                        itemNo++;
+                                    }
+                                }
+                                if (callagain) {
+                                    validateAndSavevalues(false);
+                                }
+                            }
+
+                            function removeUndefinedFromArray(rowArray) {
+                                var l = 0;
+                                var returnArray = [];
+                                for (var i = 0; i < rowArray.length; i++) {
+                                    if (rowArray[i] != undefined) {
+                                        returnArray[l] = rowArray[i];
+                                        l++;
+                                    }
+                                }
+                                return returnArray;
+                            }
+
+                            function returnItemsNeeded(rowArray) {
+                                var rowItemsneeded1 = [];
+                                for (i = 0; i < 9; i++) {
+                                    if (rowArray.indexOf(noArray[i]) == -1) {
+                                        rowItemsneeded1[i] = noArray[i];
+                                    }
+                                }
+                                return removeUndefinedFromArray(rowItemsneeded1);
+                            }
+
+                            function returnEmptyPlaces(rowArray1) {
+                                var temp = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+                                var temp1 = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+                                for (k = 0; k < 9; k++) {
+                                    if (rowArray1.indexOf(temp[k]) != -1) {
+                                        var x = rowArray1.indexOf(temp[k]);
+                                        delete temp1[x];
+                                    }
+                                }
+                                return temp1;
+                            }
+
+                            function getComapreGrid(k, inc) {
+                                var token;
+                                if (k <= 1) {
+                                    token = inc + 0;
+                                }
+                                if (k > 1 && k <= 2) {
+                                    token = inc + 1;
+                                }
+                                if (k > 2 && k <= 3) {
+                                    token = inc + 2;
+                                }
+                                return totalGrid[token];
+                            }
+
+                            function comapreGridElements(gridcomp, ele) {
+                                if (gridcomp.indexOf(ele) != -1) return false;
+                                else return true;
+                            }
+
+                            function runLoop(count) {
+                                if (count == 81) {
+                                    comeOutOfLoop = true;
+                                }
+                                var gridEle_fin = 0;
+                                var k;
+                                var inc;
+                                if (count < valuesForEachElement.length) {
+                                    var columnNo = count % 9;
+                                    var rowNo = count / 9 >> 0;
+                                    if (rowNo <= 2) {
+                                        inc = 0;
+                                        if (columnNo <= 2) {
+                                            k = 1;
+                                            gridEle_0 = gridEle_0 + 1;
+                                            gridEle_fin = gridEle_0 - 1;
+                                        }
+                                        if (columnNo > 2 && columnNo < 6) {
+                                            k = 2;
+                                            gridEle_1 = gridEle_1 + 1;
+                                            gridEle_fin = gridEle_1 - 1;
+                                        }
+                                        if (columnNo >= 6) {
+                                            k = 3;
+                                            gridEle_2 = gridEle_2 + 1;
+                                            gridEle_fin = gridEle_2 - 1;
+                                        }
+                                    }
+                                    if (rowNo > 2 && rowNo < 6) {
+                                        inc = 3;
+                                        if (columnNo <= 2) {
+                                            k = 1;
+                                            gridEle_3 = gridEle_3 + 1;
+                                            gridEle_fin = gridEle_3 - 1;
+                                        }
+                                        if (columnNo > 2 && columnNo < 6) {
+                                            k = 2;
+                                            gridEle_4 = gridEle_4 + 1;
+                                            gridEle_fin = gridEle_4 - 1;
+                                        }
+                                        if (columnNo >= 6) {
+                                            k = 3;
+                                            gridEle_5 = gridEle_5 + 1;
+                                            gridEle_fin = gridEle_5 - 1;
+                                        }
+                                    }
+                                    if (rowNo >= 6) {
+                                        inc = 6;
+                                        if (columnNo <= 2) {
+                                            k = 1;
+                                            gridEle_6 = gridEle_6 + 1;
+                                            gridEle_fin = gridEle_6 - 1;
+                                        }
+                                        if (columnNo > 2 && columnNo < 6) {
+                                            k = 2;
+                                            gridEle_7 = gridEle_7 + 1;
+                                            gridEle_fin = gridEle_7 - 1;
+                                        }
+                                        if (columnNo >= 6) {
+                                            k = 3;
+                                            gridEle_8 = gridEle_8 + 1;
+                                            gridEle_fin = gridEle_8 - 1;
+                                        }
+                                    }
+                                    if (valuesForEachElement[count] != undefined && valuesForEachElement[count].length > 1) {
+                                        var tempArrayValues = valuesForEachElement[count];
+                                        for (var j = 1; j <= tempArrayValues.length; j++) {
+                                            if (comeOutOfLoop) {
+                                                return;
+                                            }
+                                            var toSave;
+                                            var noVal;
+                                            var ele = j - 1;
+                                            var compareGrid = getComapreGrid(k, inc);
+                                            var isNotInGrid = comapreGridElements(compareGrid, tempArrayValues[ele]);
+                                            if (totalRow[rowNo].indexOf(tempArrayValues[ele]) == -1 && totalColumn[columnNo].indexOf(tempArrayValues[ele]) == -1 && isNotInGrid) {
+                                                toSave = true;
+                                                noVal = tempArrayValues[ele];
+                                            } else {
+                                                toSave = false;
+                                                noVal = "0";
+                                            }
+                                            $('#' + rowNo + '' + columnNo).val(noVal);
+                                            compareGrid[gridEle_fin] = noVal;
+                                            totalRow[rowNo][columnNo] = noVal;
+                                            totalColumn[columnNo][rowNo] = noVal;
+                                            if (toSave) {
+                                                var incr = count + 1;
+                                                runLoop(incr);
+                                            }
+                                        }
+                                        if (comeOutOfLoop) {
+                                            return;
+                                        }
+                                        compareGrid[gridEle_fin] = "0";
+                                        totalRow[rowNo][columnNo] = "0";
+                                        totalColumn[columnNo][rowNo] = "0";
+                                    } else {
+                                        var incr1 = count + 1;
+                                        runLoop(incr1);
+                                    }
+                                    window["gridEle_" + ((k + inc) - 1)] = window["gridEle_" + ((k + inc) - 1)] - 1;
+                                }
+                            }
+                        </script>
+
+</body>
+
+</html>
